@@ -1,3 +1,5 @@
+FROM pkharchenkolab/numbat-rbase:latest AS base
+
 FROM rocker/rstudio:4.2.1
 
 LABEL authors="Evan Biederstedt <evan.biederstedt@gmail.com>, Teng Gao <tgao@g.harvard.edu>" \
@@ -14,30 +16,36 @@ RUN apt-get update --yes && apt-get install --yes build-essential \
   libglpk-dev \
   samtools
 
-RUN R -e 'chooseCRANmirror(ind=42); install.packages("BiocManager")' \
-    && R -e 'BiocManager::install(c("Rsamtools"))' \
-    && R -e 'chooseCRANmirror(ind=42); install.packages(c("ragg", "pkgdown", "devtools"))' \
-    && R -e 'devtools::install_github("kharchenkolab/numbat", dependencies=TRUE)'
+WORKDIR /usr/bin 
+COPY --from=base /usr/bin/* .
+WORKDIR /data
+COPY --from=base /data . 
 
-RUN cd /usr/bin && \
-  wget https://github.com/samtools/htslib/releases/download/1.15.1/htslib-1.15.1.tar.bz2 && \
-  tar -vxjf htslib-1.15.1.tar.bz2 && cd htslib-1.15.1 && make && sudo make install
 
-RUN mkdir /data \
-    && cd /data \
-    && wget https://sourceforge.net/projects/cellsnp/files/SNPlist/genome1K.phase3.SNP_AF5e2.chr1toX.hg38.vcf.gz \
-    && gzip -d genome1K.phase3.SNP_AF5e2.chr1toX.hg38.vcf.gz
+#RUN cd /usr/bin && \
+#  wget https://github.com/samtools/htslib/releases/download/1.15.1/htslib-1.15.1.tar.bz2 && \
+#  tar -vxjf htslib-1.15.1.tar.bz2 && cd htslib-1.15.1 && make && sudo make install
 
-RUN cd /data \
-    && wget http://pklab.med.harvard.edu/teng/data/1000G_hg38.zip \
-    && unzip 1000G_hg38.zip \
+#RUN mkdir /data \
+#    && cd /data \
+#    && wget https://sourceforge.net/projects/cellsnp/files/SNPlist/genome1K.phase3.SNP_AF5e2.chr1toX.hg38.vcf.gz --show-progress --progress=bar::force \
+#    && gzip -d genome1K.phase3.SNP_AF5e2.chr1toX.hg38.vcf.gz
 
-RUN git clone https://github.com/single-cell-genetics/cellsnp-lite.git \
-    && cd cellsnp-lite \
-    && autoreconf -iv \
-    && ./configure \
-    && make \
-    && sudo make install
+#RUN cd /data \
+#    && wget http://pklab.med.harvard.edu/teng/data/1000G_hg38.zip --show-progress --progress=bar::force \
+#    && unzip 1000G_hg38.zip 
+
+#RUN git clone https://github.com/single-cell-genetics/cellsnp-lite.git \
+#    && cd cellsnp-lite \
+#    && autoreconf -iv \
+#    && ./configure \
+#    && make \
+#    && sudo make install
+
+#RUN R -e 'chooseCRANmirror(ind=42); install.packages("BiocManager")' \
+#    && R -e 'BiocManager::install(c("Rsamtools"))' \
+#    && R -e 'chooseCRANmirror(ind=42); install.packages(c("ragg", "pkgdown", "devtools"))'
+#RUN R -e 'devtools::install_github("kharchenkolab/numbat", dependencies=TRUE)'
 
 # Uncomment to include hg19
 # RUN cd /data \
@@ -46,8 +54,8 @@ RUN git clone https://github.com/single-cell-genetics/cellsnp-lite.git \
 #     && wget http://pklab.med.harvard.edu/teng/data/1000G_hg19.zip \
 #     && unzip 1000G_hg19.zip
 
-RUN wget https://storage.googleapis.com/broad-alkesgroup-public/Eagle/downloads/Eagle_v2.4.1.tar.gz \
-    && cd .. \
-    && tar -xvzf Eagle_v2.4.1.tar.gz \
-    && rm Eagle_v2.4.1.tar.gz \
-    && cp /Eagle_v2.4.1/eagle /usr/bin
+#RUN wget https://storage.googleapis.com/broad-alkesgroup-public/Eagle/downloads/Eagle_v2.4.1.tar.gz \
+#    && cd .. \
+#    && tar -xvzf Eagle_v2.4.1.tar.gz \
+#    && rm Eagle_v2.4.1.tar.gz \
+#    && cp /Eagle_v2.4.1/eagle /usr/bin
